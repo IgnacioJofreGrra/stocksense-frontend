@@ -1,0 +1,79 @@
+# Operations sobre /graphql para Inventory + subscription de alertas.
+
+# Fragment para movimientos: lo reutilizan registrarEntrada/Salida y el
+# query del historial.
+fragment MovimientoFull on StockMovement {
+  id
+  tipo
+  cantidad
+  motivo
+  nota
+  productId
+  createdAt
+}
+
+mutation RegistrarEntrada($input: RegistrarEntradaInput!) {
+  registrarEntrada(input: $input) {
+    movimiento {
+      ...MovimientoFull
+    }
+    stockActual
+  }
+}
+
+mutation RegistrarSalida($input: RegistrarSalidaInput!) {
+  registrarSalida(input: $input) {
+    movimiento {
+      ...MovimientoFull
+    }
+    stockActual
+  }
+}
+
+query StockProducto($productId: ID!) {
+  stockProducto(productId: $productId) {
+    productId
+    stockActual
+    ultimoMovimiento
+  }
+}
+
+query MovimientosProducto($productId: ID!, $query: QueryMovimientosInput) {
+  movimientosProducto(productId: $productId, query: $query) {
+    data {
+      ...MovimientoFull
+    }
+    total
+    page
+    lastPage
+  }
+}
+
+query AlertasStock {
+  alertasStock {
+    producto {
+      id
+      nombre
+      ean13
+    }
+    stockActual
+    stockMinimo
+    diferencia
+  }
+}
+
+# Subscription que dispara el dashboard cuando un producto cae bajo el
+# stockMinimo. El backend filtra por userId para no emitir alertas de
+# otros comercios.
+subscription AlertaStockBajo {
+  alertaStockBajo {
+    producto {
+      id
+      nombre
+      ean13
+    }
+    stockActual
+    stockMinimo
+    diferencia
+  }
+}

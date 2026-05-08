@@ -1,0 +1,76 @@
+# Operations sobre /graphql para el modulo de Inteligencia.
+#
+# Las 3 queries son lazy: se disparan solo cuando el dueno entra al tab
+# correspondiente y aprieta "Analizar". El backend las cachea 30 min y
+# rate-limita 3/min + 30/hora por usuario.
+#
+# Tiempos esperados de Groq: 1-3 segundos. La UI muestra estado loading
+# con timer para calibrar la espera.
+
+fragment PrediccionRestock on PrediccionRestockGql {
+  productoId
+  nombre
+  ean13
+  stockActual
+  consumoPromedioDiario
+  diasHastaAgotamiento
+  cantidadSugeridaReponer
+  urgencia
+  razonamiento
+}
+
+fragment AnalisisTendencias on AnalisisTendenciasGql {
+  patronesDiarios {
+    dia
+    insight
+    relevancia
+  }
+  patronesHorarios {
+    franja
+    insight
+  }
+  productosDestacados {
+    nombre
+    patron
+  }
+  recomendaciones
+  resumenGeneral
+}
+
+fragment ItemOrden on ItemOrdenGql {
+  productoId
+  nombre
+  ean13
+  cantidadSugerida
+  precioUnitarioEstimado
+  subtotalEstimado
+  prioridad
+  motivo
+}
+
+fragment OrdenCompra on OrdenCompraGql {
+  items {
+    ...ItemOrden
+  }
+  totalEstimado
+  notas
+  fechaSugerida
+}
+
+query PredecirReposicion {
+  predecirReposicion {
+    ...PrediccionRestock
+  }
+}
+
+query AnalizarTendencias($opciones: DateRangeInput) {
+  analizarTendencias(opciones: $opciones) {
+    ...AnalisisTendencias
+  }
+}
+
+query GenerarOrdenCompra($diasCobertura: Int) {
+  generarOrdenCompra(diasCobertura: $diasCobertura) {
+    ...OrdenCompra
+  }
+}

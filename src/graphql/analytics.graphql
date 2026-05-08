@@ -1,0 +1,22 @@
+# Operations sobre /graphql para Analytics. Las usa el dashboard para
+# armar los KPI cards.
+
+query ResumenPeriodo($opciones: DateRangeInput) {
+  resumenPeriodo(opciones: $opciones) {
+    totalEntradas
+    totalSalidas
+    productosUnicos
+    movimientosTotales
+    promedioDiarioVentas
+  }
+}
+
+query ProductosMasVendidos($opciones: DateRangeInput) {
+  productosMasVendidos(opciones: $opciones) {
+    productoId
+    ean13
+    nombreProducto
+    totalVendido
+    cantidadMovimientos
+  }
+}

@@ -1,0 +1,49 @@
+# Operations sobre /graphql para Products.
+
+# Fragment compartido para no duplicar la lista de campos en cada query.
+fragment ProductoFull on Product {
+  id
+  ean13
+  nombre
+  descripcion
+  categoria
+  precioCompra
+  precioVenta
+  unidadMedida
+  stockMinimo
+  stockActual
+  activo
+}
+
+query Productos($query: QueryProductsInput) {
+  productos(query: $query) {
+    data {
+      ...ProductoFull
+    }
+    total
+    page
+    lastPage
+  }
+}
+
+query ProductoPorEan($ean13: String!) {
+  productoPorEan(ean13: $ean13) {
+    ...ProductoFull
+  }
+}
+
+mutation CrearProducto($input: CreateProductInput!) {
+  crearProducto(input: $input) {
+    ...ProductoFull
+  }
+}
+
+mutation ActualizarProducto($id: ID!, $input: UpdateProductInput!) {
+  actualizarProducto(id: $id, input: $input) {
+    ...ProductoFull
+  }
+}
+
+mutation DesactivarProducto($id: ID!) {
+  desactivarProducto(id: $id)
+}
