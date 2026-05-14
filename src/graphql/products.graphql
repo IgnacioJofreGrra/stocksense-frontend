@@ -28,7 +28,16 @@ query Productos($query: QueryProductsInput) {
 
 query ProductoPorEan($ean13: String!) {
   productoPorEan(ean13: $ean13) {
-    ...ProductoFull
+    fuente
+    producto {
+      ...ProductoFull
+    }
+    sugerenciaOff {
+      nombre
+      marca
+      categoria
+      imagenUrl
+    }
   }
 }
 

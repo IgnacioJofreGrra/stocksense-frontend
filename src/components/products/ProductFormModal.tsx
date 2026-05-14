@@ -36,6 +36,13 @@ interface Props {
   producto?: ProductoFullFragment | null;
   /** Si viene, pre-llena ean13 (uso desde el escaner). */
   ean13Inicial?: string;
+  /** Sugerencia de Open Food Facts para pre-llenar datos. */
+  sugerenciaOff?: {
+    nombre?: string | null;
+    marca?: string | null;
+    categoria?: string | null;
+    imagenUrl?: string | null;
+  } | null;
   onSuccess?: (producto: ProductoFullFragment) => void;
 }
 
@@ -64,6 +71,15 @@ const EMPTY: FormState = {
 function buildInitial(
   producto: ProductoFullFragment | null | undefined,
   ean13Inicial: string | undefined,
+  sugerenciaOff:
+    | {
+        nombre?: string | null;
+        marca?: string | null;
+        categoria?: string | null;
+        imagenUrl?: string | null;
+      }
+    | null
+    | undefined,
 ): FormState {
   if (producto) {
     return {
@@ -77,7 +93,14 @@ function buildInitial(
       stockMinimo: producto.stockMinimo.toString(),
     };
   }
-  return { ...EMPTY, ean13: ean13Inicial ?? '' };
+
+  return {
+    ...EMPTY,
+    ean13: ean13Inicial ?? '',
+    nombre: sugerenciaOff?.nombre ?? '',
+    descripcion: sugerenciaOff?.marca ?? '',
+    categoria: sugerenciaOff?.categoria ?? '',
+  };
 }
 
 /**
@@ -96,6 +119,7 @@ export function ProductFormModal({
   onOpenChange,
   producto,
   ean13Inicial,
+  sugerenciaOff,
   onSuccess,
 }: Props) {
   // Key cambia cuando cambia el target del modal -> FormBody se remonta.
@@ -119,6 +143,7 @@ export function ProductFormModal({
           key={formKey}
           producto={producto ?? null}
           ean13Inicial={ean13Inicial}
+          sugerenciaOff={sugerenciaOff ?? null}
           onCancel={() => onOpenChange(false)}
           onSuccess={(p) => {
             onSuccess?.(p);
@@ -133,16 +158,24 @@ export function ProductFormModal({
 interface FormBodyProps {
   producto: ProductoFullFragment | null;
   ean13Inicial?: string;
+  sugerenciaOff?: {
+    nombre?: string | null;
+    marca?: string | null;
+    categoria?: string | null;
+    imagenUrl?: string | null;
+  } | null;
   onCancel: () => void;
   onSuccess: (p: ProductoFullFragment) => void;
 }
 
-function FormBody({ producto, ean13Inicial, onCancel, onSuccess }: FormBodyProps) {
+function FormBody({ producto, ean13Inicial, sugerenciaOff, onCancel, onSuccess }: FormBodyProps) {
   const isEdit = !!producto;
   // Lazy init: la funcion solo corre al primer mount. Cuando el padre
   // cambia el `key`, el componente se remonta y este init corre con
   // los nuevos props.
-  const [form, setForm] = useState<FormState>(() => buildInitial(producto, ean13Inicial));
+  const [form, setForm] = useState<FormState>(() =>
+    buildInitial(producto, ean13Inicial, sugerenciaOff),
+  );
 
   const ean13State = validateEan13(form.ean13);
   const ean13Valido = ean13State.kind === 'valid';

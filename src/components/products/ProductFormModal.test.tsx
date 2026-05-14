@@ -68,4 +68,23 @@ describe('ProductFormModal', () => {
     const ean = screen.getByLabelText(/EAN-13/i) as HTMLInputElement;
     expect(ean.value).toBe('7501031311309');
   });
+
+  it('pre-rellena nombre, categoria y descripcion desde sugerenciaOff', () => {
+    renderModal({
+      sugerenciaOff: {
+        nombre: 'Producto OFF',
+        marca: 'Marca OFF',
+        categoria: 'Bebidas',
+        imagenUrl: null,
+      },
+    });
+
+    const nombre = screen.getByLabelText(/nombre/i) as HTMLInputElement;
+    const categoria = screen.getByLabelText(/categoria/i) as HTMLInputElement;
+    const descripcion = screen.getByLabelText(/descripcion/i) as HTMLTextAreaElement;
+
+    expect(nombre.value).toBe('Producto OFF');
+    expect(categoria.value).toBe('Bebidas');
+    expect(descripcion.value).toBe('Marca OFF');
+  });
 });

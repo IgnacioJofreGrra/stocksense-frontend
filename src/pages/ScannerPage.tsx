@@ -39,11 +39,19 @@ import { isValidEan13 } from '@/utils/ean13';
  * modo "buscando" sin rebooteo del stream — solo limpiamos el estado del
  * producto encontrado.
  */
+// Agregar tipo para la sugerencia de OFF
+interface SugerenciaOff {
+  nombre?: string | null;
+  marca?: string | null;
+  categoria?: string | null;
+  imagenUrl?: string | null;
+}
+
 type Estado =
-  | { kind: 'idle' } // camara activa, sin scan recente
-  | { kind: 'searching'; ean13: string } // hizo lookup
+  | { kind: 'idle' }
+  | { kind: 'searching'; ean13: string }
   | { kind: 'found'; producto: ProductoFullFragment }
-  | { kind: 'not-found'; ean13: string }
+  | { kind: 'not-found'; ean13: string; sugerencia: SugerenciaOff | null } // ← agregar sugerencia
   | { kind: 'invalid'; codigo: string }
   | { kind: 'error'; message: string };
 
@@ -78,16 +86,22 @@ export function ScannerPage() {
         toast.error('Codigo invalido o no es EAN-13');
         return;
       }
-      // Vibracion haptic (si el dispositivo lo soporta).
       if ('vibrate' in navigator) navigator.vibrate(100);
 
       setEstado({ kind: 'searching', ean13: limpio });
       try {
         const { data } = await buscarProducto({ variables: { ean13: limpio } });
-        if (data?.productoPorEan) {
-          setEstado({ kind: 'found', producto: data.productoPorEan });
+        const resultado = data?.productoPorEan;
+
+        if (resultado?.fuente === 'local' && resultado.producto) {
+          setEstado({ kind: 'found', producto: resultado.producto });
         } else {
-          setEstado({ kind: 'not-found', ean13: limpio });
+          // fuente: 'off' o 'desconocido' — en ambos casos mostramos el form
+          setEstado({
+            kind: 'not-found',
+            ean13: limpio,
+            sugerencia: resultado?.sugerenciaOff ?? null,
+          });
         }
       } catch (err) {
         setEstado({
@@ -268,6 +282,7 @@ export function ScannerPage() {
       {estado.kind === 'not-found' && (
         <ResultadoNoEncontrado
           ean13={estado.ean13}
+          sugerencia={estado.sugerencia}
           onCrear={() => setShowCrear(true)}
           onContinuar={volverAEscanear}
         />
@@ -325,6 +340,7 @@ export function ScannerPage() {
           open={showCrear}
           onOpenChange={setShowCrear}
           ean13Inicial={estado.ean13}
+          sugerenciaOff={estado.sugerencia}  // ← nuevo prop
           onSuccess={(p) => setEstado({ kind: 'found', producto: p })}
         />
       )}
@@ -382,10 +398,12 @@ function ResultadoEncontrado({
 
 function ResultadoNoEncontrado({
   ean13,
+  sugerencia,
   onCrear,
   onContinuar,
 }: {
   ean13: string;
+  sugerencia: SugerenciaOff | null;
   onCrear: () => void;
   onContinuar: () => void;
 }) {
@@ -396,12 +414,28 @@ function ResultadoNoEncontrado({
         <p className="font-mono text-xs text-muted-foreground">EAN {ean13}</p>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-sm text-muted-foreground">
-          Este codigo todavia no esta en tu catalogo. Podes registrarlo ahora.
-        </p>
+        {/* Si OFF encontró datos, mostrarlos como preview */}
+        {sugerencia ? (
+          <div className="rounded-md bg-muted p-3 text-sm space-y-1">
+            <p className="font-medium text-foreground">
+              {sugerencia.nombre ?? 'Nombre no disponible'}
+            </p>
+            {sugerencia.marca && (
+              <p className="text-muted-foreground">Marca: {sugerencia.marca}</p>
+            )}
+            <p className="text-xs text-blue-600">
+              Datos sugeridos por Open Food Facts — podés editarlos antes de guardar
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Este codigo todavia no esta en tu catalogo. Podes registrarlo ahora.
+          </p>
+        )}
+
         <Button onClick={onCrear} className="w-full gap-2">
           <Plus className="h-4 w-4" />
-          Registrar nuevo producto
+          {sugerencia ? 'Registrar con estos datos' : 'Registrar nuevo producto'}
         </Button>
         <Button variant="outline" size="sm" className="w-full" onClick={onContinuar}>
           Saltar y seguir escaneando

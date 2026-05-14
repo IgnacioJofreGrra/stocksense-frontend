@@ -499,7 +499,7 @@ export type ProductoPorEanQueryVariables = Exact<{
 }>;
 
 
-export type ProductoPorEanQuery = { __typename?: 'Query', productoPorEan?: { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, activo: boolean } | null };
+export type ProductoPorEanQuery = { __typename?: 'Query', productoPorEan?: { __typename?: 'ResultadoEscaner', fuente: string, producto?: { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, activo: boolean } | null, sugerenciaOff?: { __typename?: 'SugerenciaOff', nombre?: string | null, marca?: string | null, categoria?: string | null, imagenUrl?: string | null } | null } | null };
 
 export type CrearProductoMutationVariables = Exact<{
   input: CreateProductInput;
@@ -1127,7 +1127,16 @@ export type ProductosQueryResult = Apollo.QueryResult<ProductosQuery, ProductosQ
 export const ProductoPorEanDocument = gql`
     query ProductoPorEan($ean13: String!) {
   productoPorEan(ean13: $ean13) {
-    ...ProductoFull
+    fuente
+    producto {
+      ...ProductoFull
+    }
+    sugerenciaOff {
+      nombre
+      marca
+      categoria
+      imagenUrl
+    }
   }
 }
     ${ProductoFullFragmentDoc}`;
