@@ -1,9 +1,6 @@
 import type { OrdenCompraFragment } from '@/generated/graphql';
 
-/**
- * Escapa un valor para CSV: si tiene coma, comillas o salto de linea, lo
- * envuelve en comillas dobles y duplica las comillas internas (RFC 4180).
- */
+// Escapa un valor para CSV segun RFC 4180.
 function csvCell(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return '';
   const s = String(value);
@@ -13,14 +10,7 @@ function csvCell(value: string | number | null | undefined): string {
   return s;
 }
 
-/**
- * buildOrdenCompraCsv — arma el contenido CSV de la orden de compra.
- *
- * Aislado de la descarga para poder testearlo sin tocar el DOM.
- *
- * Encoding: BOM UTF-8 al principio para que Excel abra los acentos
- * correctamente (sin esto, "Acción" se ve como "Acci&oacute;n" en Excel ES).
- */
+// BOM UTF-8 al principio para que Excel ES abra los acentos correctamente.
 export function buildOrdenCompraCsv(orden: OrdenCompraFragment): string {
   const headers = [
     'Producto',
@@ -49,19 +39,11 @@ export function buildOrdenCompraCsv(orden: OrdenCompraFragment): string {
   return ['﻿' + headers.join(','), ...rows, '', totalLine, fechaLine].join('\r\n');
 }
 
-/**
- * Genera nombre de archivo con la fecha actual:
- *   "orden-compra-stocksense-2026-05-08.csv"
- */
 export function ordenCompraFileName(date = new Date()): string {
   const iso = date.toISOString().split('T')[0];
   return `orden-compra-stocksense-${iso}.csv`;
 }
 
-/**
- * Dispara la descarga del CSV en el browser. No retorna nada — es el
- * efecto de borde de la accion "Exportar".
- */
 export function downloadOrdenCompraCsv(orden: OrdenCompraFragment): void {
   const csv = buildOrdenCompraCsv(orden);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -72,6 +54,5 @@ export function downloadOrdenCompraCsv(orden: OrdenCompraFragment): void {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  // Liberamos el ObjectURL despues de que el browser tome la descarga.
   URL.revokeObjectURL(url);
 }

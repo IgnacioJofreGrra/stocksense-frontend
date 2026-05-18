@@ -32,19 +32,10 @@ interface NavItem {
   label: string;
   icon: typeof LayoutDashboard;
   disabled?: boolean;
-  /** Si es true, se renderiza con el estilo "destacado" (boton primario). */
   highlight?: boolean;
-  /**
-   * Si esta seteado, el item solo se muestra a los roles indicados.
-   * Inteligencia es solo para dueno (decision producto: el empleado opera,
-   * el dueno ve la estrategia).
-   */
   roles?: UserRole[];
 }
 
-// Escaner primero — es la accion mas frecuente del dueño. highlight:true
-// lo destaca visualmente. Inteligencia esta restringido a rol dueno tanto
-// aca como en RoleGuard del router.
 const NAV_ITEMS: NavItem[] = [
   { to: '/escanear', label: 'Escanear', icon: ScanLine, highlight: true },
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -53,9 +44,6 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/inteligencia', label: 'Inteligencia', icon: Brain, roles: ['dueno'] },
 ];
 
-// Shell de las rutas autenticadas. Mobile-first: sidebar es drawer en
-// mobile (overlay) y fija en md+. Items sin enlace (rol o feature todavia
-// no disponible) se renderizan con opacity reducida.
 export function AppLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
@@ -68,7 +56,7 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar — drawer en mobile, fija en desktop */}
+      {/* sidebar: drawer en mobile, fija en desktop */}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-40 w-64 transform border-r bg-card transition-transform md:relative md:translate-x-0',
@@ -93,10 +81,6 @@ export function AppLayout() {
 
         <nav className="flex flex-col gap-1 p-3">
           {NAV_ITEMS.map((item) => {
-            // Filtro por rol: si el item tiene `roles` y el user no esta
-            // en la lista, no lo renderizamos. La proteccion real esta en
-            // el router (RoleGuard); esto es solo para que la sidebar no
-            // muestre opciones que el usuario no puede usar.
             if (item.roles && (!user || !item.roles.includes(user.rol))) {
               return null;
             }
@@ -112,8 +96,6 @@ export function AppLayout() {
                 </div>
               );
             }
-            // Highlight (Escanear): mas grande + color primario incluso
-            // cuando NO esta activo. Es la accion principal del operador.
             if (item.highlight) {
               return (
                 <NavLink
@@ -169,7 +151,6 @@ export function AppLayout() {
         </div>
       </aside>
 
-      {/* Backdrop del sidebar en mobile */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/40 md:hidden"
@@ -178,7 +159,6 @@ export function AppLayout() {
         />
       )}
 
-      {/* Main column */}
       <div className="flex flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
           <div className="flex items-center gap-3">

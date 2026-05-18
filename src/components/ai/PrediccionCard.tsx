@@ -10,10 +10,7 @@ interface Props {
 
 type Urgencia = 'alta' | 'media' | 'baja';
 
-/**
- * Normaliza la urgencia a un set conocido. La IA puede devolver mayusculas/
- * minusculas/acentos; defendemos contra eso para no romper estilos.
- */
+// la IA puede devolver mayusculas/acentos variados; normalizamos al set conocido
 function normalizarUrgencia(raw: string): Urgencia {
   const u = raw.toLowerCase().trim();
   if (u.includes('alta') || u.includes('urgente') || u.includes('critic')) return 'alta';
@@ -42,19 +39,6 @@ const URGENCIA_STYLE: Record<Urgencia, { card: string; badge: string; label: str
   },
 };
 
-/**
- * PrediccionCard — render de una prediccion de reposicion.
- *
- * Layout:
- * - Header con icono + badge de urgencia color-coded
- * - Nombre del producto + EAN-13
- * - Metricas (stock, dias, consumo, sugerencia)
- * - Razonamiento de la IA en formato de cita
- *
- * Decision UX: el razonamiento de la IA va con comillas y estilo italic
- * para dejar claro que es texto generado, no metricas duras. Esto baja
- * la expectativa de "verdad absoluta" y deja al dueno decidir.
- */
 export function PrediccionCard({ prediccion }: Props) {
   const urgencia = normalizarUrgencia(prediccion.urgencia);
   const style = URGENCIA_STYLE[urgencia];

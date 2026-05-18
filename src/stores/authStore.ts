@@ -13,13 +13,11 @@ const REFRESH_KEY = 'stocksense_refresh_token';
 interface AuthState {
   user: UserProfile | null;
   accessToken: string | null;
-  // El refresh token tambien lo mantenemos en memoria para evitar leer de
-  // localStorage en cada request (es lectura sincronica pero igual es ruido).
+  // En memoria para no leer localStorage en cada request.
   refreshToken: string | null;
   isAuthenticated: boolean;
-  // isInitializing: cuando arranca la app, intentamos refrescar con el
-  // token que haya en localStorage. Mientras dura ese intento, las rutas
-  // protegidas muestran un loader (no redirigen a login todavia).
+  // Mientras dura el refresh inicial, las rutas protegidas muestran un
+  // loader en vez de redirigir a login.
   isInitializing: boolean;
   isLoading: boolean;
   error: string | null;
@@ -32,20 +30,15 @@ interface AuthState {
   clearError: () => void;
 }
 
-// Estado de auth. Refresh token en localStorage para sobrevivir recargas;
-// access token solo en memoria (XSS no lo encuentra en storage). En
-// initialize() leemos refresh -> intentamos refresh -> getProfile para
-// hidratar `user`. Migracion a HttpOnly cookie queda pendiente (requiere
-// CORS + cookie-parser en backend).
+// Access token solo en memoria; refresh token en localStorage para
+// sobrevivir recargas. TODO: migrar a cookie HttpOnly (requiere CORS +
+// cookie-parser en el backend).
 export const useAuthStore = create<AuthState>((set, get) => {
-  // Conectamos apiFetch con el store para el flujo de refresh automatico
-  // y el logout en 401 sin chance de refresh.
   configureApi({
     getAccessToken: () => get().accessToken,
     getRefreshToken: () => get().refreshToken,
     setTokens: (access, refresh) => get().setTokens(access, refresh),
     onUnauthorized: () => {
-      // Refresh fallo o no habia tokens -> limpiar estado.
       localStorage.removeItem(REFRESH_KEY);
       set({
         user: null,
@@ -93,9 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     logout: async () => {
-      // Mejor esfuerzo: si la llamada falla (red, token expirado), igual
-      // limpiamos el estado local. La sesion del lado del server se
-      // invalida cuando el refresh token vence.
+      // Mejor esfuerzo: si la llamada falla, igual limpiamos el estado local.
       try {
         await authService.logout();
       } catch {
@@ -111,11 +102,6 @@ export const useAuthStore = create<AuthState>((set, get) => {
       });
     },
 
-    /**
-     * Al iniciar la app: si hay refresh token guardado, intenta renovar.
-     * Si OK, hidrata el user con getProfile (porque /auth/refresh solo
-     * devuelve tokens). Si falla, queda en estado no autenticado.
-     */
     initialize: async () => {
       const stored = localStorage.getItem(REFRESH_KEY);
       if (!stored) {
@@ -124,11 +110,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
       }
       try {
         const response = await authService.refresh(stored);
-        // Ya tenemos los tokens; hidratamos el user con getProfile.
-        // configureApi ya esta conectado, asi que apiFetch usara el nuevo
-        // accessToken automaticamente.
         applyAuthResponse(set, response);
-        // Refresca user data por si cambio comercioNombre, etc.
+        // /auth/refresh solo devuelve tokens; hidratamos el user aparte.
         const user = await authService.getProfile();
         set({ user });
       } catch {

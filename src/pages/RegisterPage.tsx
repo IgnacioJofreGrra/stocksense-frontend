@@ -7,16 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/authStore';
 
-/**
- * RegisterPage — formulario de registro con validacion client-side.
- *
- * Validaciones:
- * - Password >= 8 caracteres (matches el DTO del backend).
- * - Password === confirmar (solo client-side; el backend solo recibe una).
- * - Email se delega al type="email" del input.
- *
- * El store gestiona el resto (email duplicado -> 409 -> error en estado).
- */
 export function RegisterPage() {
   const navigate = useNavigate();
   const { register, isAuthenticated, isLoading, error, clearError } = useAuthStore();
@@ -52,7 +42,7 @@ export function RegisterPage() {
       });
       navigate('/dashboard');
     } catch {
-      // store ya seteo error.
+      // el store ya seteo el error
     }
   };
 

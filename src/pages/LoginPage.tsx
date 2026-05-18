@@ -7,16 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/stores/authStore';
 
-/**
- * LoginPage — formulario de login centrado, mobile-first.
- *
- * Estados manejados:
- * - isLoading: deshabilita boton mientras la request esta en vuelo.
- * - error del store: muestra el mensaje del backend (ej. "Credenciales
- *   invalidas") sin filtrar info que ayude a enumerar usuarios.
- * - Si el user ya esta autenticado (caso: login -> back -> /login),
- *   redirigimos a /dashboard.
- */
 export function LoginPage() {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading, error, clearError } = useAuthStore();
@@ -34,7 +24,7 @@ export function LoginPage() {
       await login({ email, password });
       navigate('/dashboard');
     } catch {
-      // El store ya seteo el error para mostrarlo abajo.
+      // el store ya seteo el error
     }
   };
 

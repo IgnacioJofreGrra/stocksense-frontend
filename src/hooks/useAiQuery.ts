@@ -1,18 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ApolloError } from '@apollo/client';
 
-/**
- * Categoria de error que devuelve el backend de IA. Mapeada desde el
- * codigo HTTP/GraphQL de la respuesta:
- *
- * - rate-limit  -> 429 (AiThrottlerGuard, "Limite de consultas alcanzado")
- * - unavailable -> 503 (Groq caido, key no configurada o timeout)
- * - forbidden   -> 403 (rol empleado intento llamar a una query de IA)
- * - unknown     -> cualquier otra cosa (red, parse, etc.)
- *
- * El mensaje tipo "Reintentar en Xs" lleva el contador en segundos: lo
- * extraemos para alimentar el countdown del boton.
- */
+// Categoria de error del backend de IA, mapeada desde el status HTTP:
+// 429 rate-limit, 503 unavailable, 403 forbidden, resto unknown.
 export type AiErrorKind = 'rate-limit' | 'unavailable' | 'forbidden' | 'unknown';
 
 export interface AiErrorInfo {
@@ -22,11 +12,8 @@ export interface AiErrorInfo {
   retryAfterSeconds?: number;
 }
 
-/**
- * Convierte un ApolloError (o Error generico) en AiErrorInfo. Es defensivo
- * porque el shape de extensions.code/status varia segun la version de
- * Apollo y la config del backend.
- */
+// Defensivo: el shape de extensions.code/status varia segun la version de
+// Apollo y la config del backend.
 export function classifyAiError(error: ApolloError | Error | undefined): AiErrorInfo | null {
   if (!error) return null;
 
@@ -34,8 +21,7 @@ export function classifyAiError(error: ApolloError | Error | undefined): AiError
   const graphQLErrors = apolloError.graphQLErrors ?? [];
   const first = graphQLErrors[0];
 
-  // Apollo coloca el codigo en extensions.code (string) y a veces el status
-  // numerico en extensions.status / extensions.exception.status.
+  // El status numerico puede venir en distintas claves segun el backend.
   const ext = (first?.extensions ?? {}) as {
     code?: string;
     status?: number;
@@ -62,10 +48,7 @@ export function classifyAiError(error: ApolloError | Error | undefined): AiError
   return { kind: 'unknown', message };
 }
 
-/**
- * Lee "Reintentar en Xs" o "X segundos" del mensaje del backend. Si no lo
- * encuentra, default 60 (el throttler ttl es 60s para la ventana corta).
- */
+// Default 60s si el mensaje no trae numero: es el ttl del throttler.
 function extractRetrySeconds(message: string): number {
   const match = message.match(/(\d+)\s*s(egundos)?/i);
   if (match) {
@@ -75,18 +58,8 @@ function extractRetrySeconds(message: string): number {
   return 60;
 }
 
-/**
- * useAiCountdown — countdown reactivo para el rate limit.
- *
- * Cuando AiErrorInfo trae kind: 'rate-limit', llamamos a `start(seconds)`.
- * El hook expone:
- * - secondsLeft: numero que decrece de seconds -> 0 cada segundo
- * - isBlocked: true mientras secondsLeft > 0 (para deshabilitar el boton)
- * - reset(): cancelar manualmente (ej: al cambiar de tab)
- *
- * Usamos un solo setInterval y guardamos el endTime en ref para que el
- * countdown sea preciso aunque React reschedulee renders.
- */
+// Countdown para el rate limit. Guardamos endTime en ref para que sea
+// preciso aunque React reschedulee renders.
 export function useAiCountdown() {
   const [secondsLeft, setSecondsLeft] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -123,7 +96,6 @@ export function useAiCountdown() {
     endTimeRef.current = 0;
   }, [stop]);
 
-  // Cleanup al desmontar.
   useEffect(() => stop, [stop]);
 
   return useMemo(
@@ -137,15 +109,8 @@ export function useAiCountdown() {
   );
 }
 
-/**
- * useElapsedTimer — contador en segundos mientras `running` es true.
- *
- * Lo usamos en los botones de "Analizar..." mientras Groq tarda 1-3s, asi
- * el operador ve "Analizando... 2s" y entiende que la app no se trabo.
- *
- * Si running=false, devolvemos 0 directo sin tocar state (asi evitamos
- * cascading renders y la regla react-hooks/set-state-in-effect).
- */
+// Contador en segundos mientras `running` es true; con running=false
+// devolvemos 0 sin tocar state para evitar cascading renders.
 export function useElapsedTimer(running: boolean) {
   const [elapsed, setElapsed] = useState(0);
 

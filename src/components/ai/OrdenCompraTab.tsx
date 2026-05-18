@@ -29,7 +29,6 @@ const PRIORIDAD_STYLE: Record<string, string> = {
   baja: 'bg-emerald-100 text-emerald-900 border-emerald-200',
 };
 
-/** Formatea pesos AR. Si el valor es null/undefined devuelve "—". */
 function formatARS(n: number | null | undefined): string {
   if (n === null || n === undefined) return '—';
   return n.toLocaleString('es-AR', {
@@ -39,21 +38,7 @@ function formatARS(n: number | null | undefined): string {
   });
 }
 
-/**
- * OrdenCompraTab — Tab "Orden de Compra".
- *
- * Flujo:
- * 1. Selector "Dias de cobertura" (rango 7-30, default 14).
- * 2. Boton "Generar orden" -> consulta backend (Groq calcula items).
- * 3. Tabla con prioridad, cantidades, precios y motivos.
- * 4. Footer con total estimado, fecha sugerida y notas de la IA.
- * 5. Boton "Exportar CSV" descarga archivo con BOM UTF-8 (Excel-friendly).
- *
- * Por que rango 7-30: menos de 7 dias deja al comercio sin margen ante
- * imprevistos; mas de 30 sobre-stockea productos perecederos. El rango
- * lo cumple el slider/input del lado del frontend (el backend acepta
- * cualquier valor pero la UX guia al rango sano).
- */
+// rango 7-30: menos deja sin margen, mas sobre-stockea perecederos
 export function OrdenCompraTab() {
   const [diasCobertura, setDiasCobertura] = useState(14);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);

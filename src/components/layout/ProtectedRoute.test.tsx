@@ -4,16 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { useAuthStore } from '@/stores/authStore';
 import { ProtectedRoute } from './ProtectedRoute';
 
-/**
- * Tests del ProtectedRoute.
- *
- * Estados a verificar:
- * - isInitializing -> muestra loader (no redirige).
- * - autenticado -> renderiza la ruta hija.
- * - no autenticado post-init -> redirige a /login.
- *
- * Usamos MemoryRouter para no depender de la URL real del browser.
- */
 function renderWithRouter(initialPath: string) {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>

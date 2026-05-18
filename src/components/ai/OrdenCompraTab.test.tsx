@@ -8,18 +8,6 @@ import {
 } from '@/generated/graphql';
 import { OrdenCompraTab } from './OrdenCompraTab';
 
-/**
- * Tests del OrdenCompraTab.
- *
- * Cubrimos:
- * - renderizado de la tabla con items
- * - calculo y display del total estimado
- * - export CSV (verificamos que se invoque con el contenido correcto)
- *
- * El export real usa Blob + ObjectURL: stubeamos ambos y verificamos el
- * contenido del Blob construido.
- */
-
 const ordenFixture: GenerarOrdenCompraQuery['generarOrdenCompra'] = {
   __typename: 'OrdenCompraGql',
   totalEstimado: 51000,
@@ -91,12 +79,10 @@ describe('OrdenCompraTab', () => {
     await user.click(screen.getByRole('button', { name: /generar orden de compra/i }));
 
     const total = await screen.findByTestId('total-estimado');
-    // Format ARS: "$ 51.000" (con espacio o sin, depende del runtime es-AR)
     expect(total.textContent).toMatch(/51\.000/);
   });
 
   it('exporta CSV con los datos correctos al hacer click en exportar', async () => {
-    // Stubs del DOM para el download
     const createObjectURLSpy = vi.fn().mockReturnValue('blob:fake');
     const revokeObjectURLSpy = vi.fn();
     const originalCreate = URL.createObjectURL;
@@ -104,7 +90,6 @@ describe('OrdenCompraTab', () => {
     URL.createObjectURL = createObjectURLSpy;
     URL.revokeObjectURL = revokeObjectURLSpy;
 
-    // Capturamos el Blob generado para verificar su contenido.
     const blobs: Blob[] = [];
     createObjectURLSpy.mockImplementation((b: Blob) => {
       blobs.push(b);

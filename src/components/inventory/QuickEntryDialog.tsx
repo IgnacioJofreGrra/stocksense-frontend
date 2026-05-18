@@ -32,18 +32,11 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   producto: ProductoMin;
-  /** Llamado al exito; el caller decide que hacer (refetch, volver al scanner). */
   onRegistrado?: (stockActual: number) => void;
 }
 
 const MOTIVOS = ['compra', 'devolucion', 'inventario inicial', 'otro'];
 
-/**
- * QuickEntryDialog — registrar entrada rapida.
- *
- * Mismo patron que QuickSaleDialog. Cantidad default 1 (escenario tipico
- * en mostrador).
- */
 export function QuickEntryDialog({ open, onOpenChange, producto, onRegistrado }: Props) {
   const [cantidad, setCantidad] = useState('1');
   const [motivo, setMotivo] = useState<string>('compra');
@@ -58,11 +51,7 @@ export function QuickEntryDialog({ open, onOpenChange, producto, onRegistrado }:
       return;
     }
     try {
-      // Optimistic UI: Apollo aplica esta respuesta al cache inmediatamente
-      // y la revierte si el server falla. Para entradas siempre es seguro
-      // (sumar stock no genera errores de validacion). El __typename y el
-      // id del Product le permiten a Apollo hacer match en el cache y
-      // actualizar el stockActual en cualquier query que lo tenga.
+      // optimistic UI: seguro para entradas, sumar stock nunca falla validacion
       const stockOptimista =
         producto.stockActual != null ? producto.stockActual + cantidadNum : 0;
 
@@ -92,8 +81,6 @@ export function QuickEntryDialog({ open, onOpenChange, producto, onRegistrado }:
           },
         },
         update: (cache, { data: result }) => {
-          // Refrescamos el campo stockActual del Product en cache. Asi la
-          // tabla y cualquier vista que lo tenga se actualizan al toque.
           if (!result) return;
           cache.modify({
             id: cache.identify({ __typename: 'Product', id: producto.id }),
@@ -109,7 +96,6 @@ export function QuickEntryDialog({ open, onOpenChange, producto, onRegistrado }:
       );
       onRegistrado?.(nuevoStock);
       onOpenChange(false);
-      // Reset para la proxima vez que se abra el dialog.
       setCantidad('1');
       setMotivo('compra');
       setNota('');

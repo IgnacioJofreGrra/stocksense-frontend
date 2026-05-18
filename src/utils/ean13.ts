@@ -1,16 +1,5 @@
-/**
- * Validador EAN-13 con digito verificador.
- *
- * Replica la logica del backend (src/common/validators/ean13.validator.ts):
- * - 13 digitos numericos.
- * - Digito 13 = (10 - (sum % 10)) % 10, donde sum es la suma ponderada de
- *   los primeros 12 digitos (impares peso 1, pares peso 3, 1-indexed).
- *
- * Por que duplicar la logica en el frontend:
- * - Feedback inmediato al usuario al escribir o escanear (no esperar al
- *   round-trip al backend).
- * - El backend igual valida — esta es defensa en cliente, no la unica.
- */
+// Validacion EAN-13 client-side para feedback inmediato al escribir/escanear.
+// Replica la logica del backend (src/common/validators/ean13.validator.ts).
 export function isValidEan13(value: unknown): boolean {
   if (typeof value !== 'string') return false;
   if (!/^\d{13}$/.test(value)) return false;
@@ -18,8 +7,7 @@ export function isValidEan13(value: unknown): boolean {
   let suma = 0;
   for (let i = 0; i < 12; i++) {
     const digito = Number(value.charAt(i));
-    // i=0 -> posicion 1 (impar) -> peso 1.
-    // i=1 -> posicion 2 (par)   -> peso 3.
+    // Pesos 1-indexed: posiciones impares peso 1, pares peso 3.
     const peso = (i + 1) % 2 === 0 ? 3 : 1;
     suma += digito * peso;
   }
@@ -28,10 +16,7 @@ export function isValidEan13(value: unknown): boolean {
   return checkEsperado === checkRecibido;
 }
 
-/**
- * Estados posibles de validacion mientras el usuario escribe. Util para
- * mostrar el feedback en el UI (verde / rojo / neutro).
- */
+// Estados de validacion mientras el usuario escribe (feedback en el UI).
 export type Ean13Validation =
   | { kind: 'empty' }
   | { kind: 'incomplete'; faltantes: number }

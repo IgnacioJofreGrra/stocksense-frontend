@@ -2,15 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from './authStore';
 import * as authService from '@/services/authService';
 
-/**
- * Tests del authStore.
- *
- * Mockeamos authService porque el store es solo state management; no
- * tiene sentido ejecutar fetch real en unit tests.
- */
 describe('useAuthStore', () => {
   beforeEach(() => {
-    // Reset store entre tests: borrar tokens persistidos y volver al estado inicial.
     localStorage.clear();
     useAuthStore.setState({
       user: null,
@@ -50,7 +43,6 @@ describe('useAuthStore', () => {
     expect(state.isAuthenticated).toBe(true);
     expect(state.accessToken).toBe('access-xxx');
     expect(state.user?.email).toBe('a@b.com');
-    // Refresh token persistido para sobrevivir recarga.
     expect(localStorage.getItem('stocksense_refresh_token')).toBe('refresh-xxx');
   });
 
@@ -70,7 +62,6 @@ describe('useAuthStore', () => {
 
   it('limpia el estado y localStorage al hacer logout', async () => {
     vi.spyOn(authService.authService, 'logout').mockResolvedValue({ message: 'ok' });
-    // Estado inicial autenticado.
     useAuthStore.setState({
       isAuthenticated: true,
       accessToken: 'a',

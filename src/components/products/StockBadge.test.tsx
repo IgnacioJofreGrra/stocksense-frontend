@@ -2,10 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { StockBadge } from './StockBadge';
 
-/**
- * StockBadge — semaforo de stock.
- * Reglas: 0 -> "Sin stock"; <= min -> rojo; <= min*2 -> ambar; resto verde.
- */
 describe('StockBadge', () => {
   it('muestra "Sin stock" cuando stockActual <= 0', () => {
     render(<StockBadge stockActual={0} stockMinimo={5} />);

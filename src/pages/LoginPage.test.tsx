@@ -5,12 +5,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/stores/authStore';
 import { LoginPage } from './LoginPage';
 
-/**
- * Tests del LoginPage.
- *
- * Mockeamos el login del store para no llegar a la red. Verificamos que
- * los campos se rendericen y que submit invoque login con los valores.
- */
 describe('LoginPage', () => {
   it('renderiza email, password y boton', () => {
     useAuthStore.setState({ isAuthenticated: false, isLoading: false, error: null });

@@ -38,14 +38,6 @@ interface Props {
 
 const MOTIVOS = ['venta', 'devolucion proveedor', 'merma', 'otro'];
 
-/**
- * QuickSaleDialog — registrar salida rapida.
- *
- * - Si stock actual conocido y cantidad > stock -> deshabilita el boton
- *   y muestra "Stock insuficiente" antes de mandar al backend.
- * - Si tras la venta el stock queda <= stockMinimo, toast adicional de
- *   advertencia (separado del exito).
- */
 export function QuickSaleDialog({ open, onOpenChange, producto, onRegistrado }: Props) {
   const [cantidad, setCantidad] = useState('1');
   const [motivo, setMotivo] = useState<string>('venta');
@@ -63,14 +55,12 @@ export function QuickSaleDialog({ open, onOpenChange, producto, onRegistrado }: 
       toast.error('La cantidad debe ser un entero positivo');
       return;
     }
-    // Optimistic UI condicional: solo cuando hay margen amplio sobre el
-    // minimo. Cerca del minimo preferimos esperar la respuesta del server
-    // (evita flash de cambio + rollback si el backend rechaza por race).
+    // optimistic solo con margen amplio: cerca del minimo evitamos flash + rollback por race
     const margen =
       stockConocido !== null && producto.stockMinimo !== undefined
         ? stockConocido - cantidadNum - producto.stockMinimo
         : -Infinity;
-    const usarOptimistic = margen >= 5; // 5 unidades de margen sobre el minimo
+    const usarOptimistic = margen >= 5;
 
     try {
       const { data } = await registrar({
@@ -114,7 +104,6 @@ export function QuickSaleDialog({ open, onOpenChange, producto, onRegistrado }: 
       });
       const nuevoStock = data?.registrarSalida.stockActual ?? 0;
       toast.success(`-${cantidadNum} ${producto.nombre}. Stock: ${nuevoStock}`);
-      // Advertencia secundaria si quedo bajo el minimo.
       if (producto.stockMinimo !== undefined && nuevoStock <= producto.stockMinimo) {
         toast.warning(
           `${producto.nombre} bajo stock minimo (${nuevoStock}/${producto.stockMinimo})`,

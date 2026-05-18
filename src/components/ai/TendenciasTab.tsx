@@ -36,20 +36,13 @@ const RELEVANCIA_STYLE: Record<string, string> = {
   baja: 'bg-emerald-100 text-emerald-900 border-emerald-200',
 };
 
-/**
- * Calcula la fecha de inicio (formato ISO) restando N dias de hoy.
- * Lo pasamos como string al backend (DateRangeInput.desde es String).
- */
 function fechaDesde(dias: number): string {
   const d = new Date();
   d.setDate(d.getDate() - dias);
   return d.toISOString();
 }
 
-/**
- * Map del orden de los dias para que el grafico no salga aleatorio.
- * Si la IA devuelve "Lunes", "Sabado", "Martes", lo reordenamos lun -> dom.
- */
+// la IA puede devolver los dias en cualquier orden; los reordenamos lun -> dom
 const ORDEN_DIAS: Record<string, number> = {
   lunes: 0,
   martes: 1,
@@ -62,11 +55,7 @@ const ORDEN_DIAS: Record<string, number> = {
   domingo: 6,
 };
 
-/**
- * Convierte un patron diario en data point para el BarChart. Asignamos un
- * "score" derivado de la relevancia para que el grafico tenga eje Y
- * significativo aunque el backend no devuelva una metrica numerica.
- */
+// score derivado de la relevancia: el backend no devuelve metrica numerica
 function patronesADataPoints(
   patrones: Array<{ dia: string; insight: string; relevancia: string }>,
 ) {
@@ -85,10 +74,6 @@ function patronesADataPoints(
     }));
 }
 
-/**
- * patronesHorariosADataPoints — convierte franja horaria a puntos para el
- * AreaChart. El backend devuelve franjas tipo "manana", "mediodia", etc.
- */
 function patronesHorariosADataPoints(
   patrones: Array<{ franja: string; insight: string }>,
 ) {
@@ -99,19 +84,6 @@ function patronesHorariosADataPoints(
   }));
 }
 
-/**
- * TendenciasTab — Tab "Analisis de Tendencias".
- *
- * 5 secciones:
- * 1. Resumen general de la IA (texto narrativo).
- * 2. Patrones por dia (BarChart + insights con badges).
- * 3. Patrones por hora (AreaChart + insights).
- * 4. Productos destacados (lista con patron detectado).
- * 5. Recomendaciones (3-5 items numerados, accionables).
- *
- * El selector de rango (7/30/90 dias) lo controlamos en estado local;
- * cada cambio dispara una nueva query con DateRangeInput.
- */
 export function TendenciasTab() {
   const [rango, setRango] = useState<RangoDias>('30');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);

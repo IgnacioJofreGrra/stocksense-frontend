@@ -14,16 +14,6 @@ import {
   useResumenPeriodoQuery,
 } from '@/generated/graphql';
 
-/**
- * DashboardPage — landing autenticado.
- *
- * Compone:
- * 1. KPI cards con resumen del periodo (totales, promedio).
- * 2. Lista de alertas de stock (productos bajo el minimo).
- * 3. Subscription en vivo: cuando una salida deja stock bajo el minimo,
- *    sonner toast + Apollo refetch de las alertas para que la lista se
- *    actualice sin reload.
- */
 export function DashboardPage() {
   const { data: resumen, loading: resumenLoading } = useResumenPeriodoQuery();
   const {
@@ -32,8 +22,6 @@ export function DashboardPage() {
     refetch: refetchAlertas,
   } = useAlertasStockQuery();
 
-  // Subscription: el backend filtra por userId, asi que solo recibimos
-  // alertas de nuestro propio comercio. El payload viene tipado por codegen.
   const { data: subData } = useAlertaStockBajoSubscription();
   const { notify } = useBrowserNotifications();
 
@@ -42,23 +30,18 @@ export function DashboardPage() {
     if (!alerta) return;
     const titulo = `${alerta.producto.nombre} llego a ${alerta.stockActual} unidades`;
     const detalle = `Minimo: ${alerta.stockMinimo}`;
-    // Toast in-app: visible siempre.
     toast.warning(`${titulo} (${detalle})`, { duration: 6000 });
-    // Notificacion del navegador: solo si el user la habilito. Funciona
-    // incluso con la pestaña en segundo plano. tag dedupe: dos alertas
-    // del mismo producto no apilan.
+    // tag dedupe: dos alertas del mismo producto no apilan
     notify(`Stock bajo: ${alerta.producto.nombre}`, {
       body: `${alerta.stockActual}/${alerta.stockMinimo} unidades`,
       icon: '/icon.svg',
       tag: `stock-${alerta.producto.id}`,
     });
-    // Refrescamos la lista de alertas.
     void refetchAlertas();
   }, [subData, refetchAlertas, notify]);
 
   const r = resumen?.resumenPeriodo;
   const lista = alertas?.alertasStock ?? [];
-  // Empty state global: si no hay actividad alguna, sugerimos empezar.
   const sinActividad =
     !resumenLoading &&
     r &&

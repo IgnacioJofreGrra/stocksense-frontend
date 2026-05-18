@@ -4,19 +4,8 @@ const STORAGE_KEY = 'stocksense_notifications_asked';
 
 type Permission = 'default' | 'granted' | 'denied' | 'unsupported';
 
-/**
- * useBrowserNotifications — gestion de la Notification API del navegador.
- *
- * Estados:
- * - unsupported: el navegador (o iOS Safari < 16.4) no implementa la API.
- * - default: nunca pedimos permiso.
- * - granted/denied: ya respondio.
- *
- * Diseño: NO pedimos permiso al cargar (mala UX). Lo pedimos cuando el
- * usuario lo elige (banner) o cuando intenta una accion que se beneficia
- * de notificaciones. Recordamos en localStorage si ya intentamos pedir
- * para no insistir en cada login.
- */
+// No pedimos permiso al cargar; se pide desde el banner. Guardamos en
+// localStorage si ya preguntamos para no insistir en cada login.
 export function useBrowserNotifications() {
   const [permission, setPermission] = useState<Permission>(() =>
     typeof window !== 'undefined' && 'Notification' in window
@@ -44,17 +33,16 @@ export function useBrowserNotifications() {
     (title: string, options?: NotificationOptions): void => {
       if (permission !== 'granted') return;
       try {
-        // tag dedupe: dos alertas del mismo producto no apilan, se reemplazan.
         new Notification(title, options);
       } catch {
-        // Algunos navegadores tiran si el tab esta inactivo o si el SW
-        // no esta listo. No es critico — el toast in-app sigue mostrandose.
+        // Algunos navegadores tiran si el tab esta inactivo; el toast
+        // in-app sigue mostrandose igual.
       }
     },
     [permission],
   );
 
-  // Sincronizamos el estado con cambios externos (otra tab cambia permiso, etc.).
+  // Sincroniza el estado si otra tab cambia el permiso.
   useEffect(() => {
     if (permission === 'unsupported') return;
     const interval = setInterval(() => {

@@ -9,9 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
 
-// Datos del usuario y cambio de password. La UI esta completa; los
-// handlers todavia no llaman al PATCH real — muestran un toast hasta que
-// reconectemos los endpoints recientes.
+// los handlers todavia no llaman al PATCH real — muestran un toast hasta reconectar endpoints
 export function ProfilePage() {
   const { user } = useAuthStore();
 
@@ -42,7 +40,7 @@ function DatosCuenta() {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: llamar PATCH /auth/profile (endpoint ya existente en backend).
+    // TODO: llamar PATCH /auth/profile
     toast.info('Edicion de perfil estara disponible proximamente');
   };
 
@@ -129,7 +127,7 @@ function CambioPassword() {
       setError('Las contraseñas no coinciden');
       return;
     }
-    // TODO: llamar PATCH /auth/password (endpoint ya existente en backend).
+    // TODO: llamar PATCH /auth/password
     toast.info('Cambio de contraseña estara disponible proximamente');
     setActual('');
     setNueva('');

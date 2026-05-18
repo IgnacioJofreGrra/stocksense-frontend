@@ -5,14 +5,6 @@ import type { UserProfile } from '@/services/authService';
 import { useAuthStore } from '@/stores/authStore';
 import { RoleGuard } from './RoleGuard';
 
-/**
- * Tests del RoleGuard.
- *
- * Casos:
- * - sin user -> redirect a /login (no a redirectTo).
- * - rol permitido -> renderiza Outlet.
- * - rol no permitido -> redirect a redirectTo (default /dashboard).
- */
 function renderWithRoute(initialPath: string) {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>

@@ -9,16 +9,6 @@ import {
 } from '@/generated/graphql';
 import { PrediccionesTab } from './PrediccionesTab';
 
-/**
- * Test integral del tab. Cubrimos:
- * - empty state inicial (CTA visible)
- * - resultados ordenados por urgencia
- * - empty state post-fetch (inventario sano)
- * - rate-limit con countdown
- *
- * Mockeamos PredecirReposicion con MockedResponse de Apollo.
- */
-
 function fixture(urgencia: 'alta' | 'media' | 'baja', dias: number, nombre: string) {
   return {
     __typename: 'PrediccionRestockGql' as const,
@@ -111,7 +101,6 @@ describe('PrediccionesTab', () => {
       expect(screen.getByText(/Limite de consultas alcanzado/i)).toBeInTheDocument();
     });
 
-    // Algun control debe mostrar el countdown "Esperar Xs..."
     expect(screen.getAllByText(/Esperar \d+s/i).length).toBeGreaterThan(0);
   });
 });

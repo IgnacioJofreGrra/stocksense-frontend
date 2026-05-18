@@ -1,12 +1,6 @@
 import { Boxes } from 'lucide-react';
 
-/**
- * PageLoader — fallback de Suspense mientras carga un chunk lazy.
- *
- * Aparece tipicamente <100ms al navegar a una ruta no cargada todavia.
- * Lo mantenemos simple: logo + spinner. Sin animaciones complejas porque
- * desaparece rapido.
- */
+// fallback de Suspense para chunks lazy
 export function PageLoader() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">

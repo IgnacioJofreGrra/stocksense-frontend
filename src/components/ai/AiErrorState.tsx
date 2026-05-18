@@ -5,21 +5,10 @@ import type { AiErrorInfo } from '@/hooks/useAiQuery';
 
 interface Props {
   info: AiErrorInfo;
-  /** Segundos restantes del countdown (solo aplica a rate-limit). */
   secondsLeft?: number;
   onRetry?: () => void;
 }
 
-/**
- * AiErrorState — render unificado para los 4 escenarios de error de IA.
- *
- * Cada caso tiene su mensaje en castellano y su accion sugerida:
- * - rate-limit: countdown con boton deshabilitado.
- * - unavailable: explica que el servicio falla pero el inventario sigue
- *   funcionando (importante para no asustar al dueno).
- * - forbidden: solo dueno (no deberia llegar aca por el RoleGuard).
- * - unknown: mensaje generico + reintentar.
- */
 export function AiErrorState({ info, secondsLeft = 0, onRetry }: Props) {
   if (info.kind === 'rate-limit') {
     return (

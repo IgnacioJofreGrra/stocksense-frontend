@@ -1,14 +1,6 @@
 import { WifiOff } from 'lucide-react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
-/**
- * OfflineBanner — barra superior visible solo cuando navigator.onLine
- * es false. Mensaje claro: estamos sirviendo del cache, los cambios
- * no se persisten hasta que vuelva la red.
- *
- * Lo posicionamos sticky al top del main, fuera del header del layout
- * para que siempre se vea arriba aun haciendo scroll.
- */
 export function OfflineBanner() {
   const online = useOnlineStatus();
   if (online) return null;

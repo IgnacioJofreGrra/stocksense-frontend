@@ -6,12 +6,6 @@ interface Props {
   stockMinimo: number;
 }
 
-// Semaforo de stock:
-//   0          -> "Sin stock", rojo
-//   <= minimo  -> bajo stock, rojo
-//   <= min*2   -> atencion, amarillo
-//   resto      -> ok, verde
-// Centralizado para que ProductsPage e InventoryPage no dupliquen umbrales.
 export function StockBadge({ stockActual, stockMinimo }: Props) {
   if (stockActual <= 0) {
     return (

@@ -2,10 +2,6 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { useOnlineStatus } from './useOnlineStatus';
 
-/**
- * useOnlineStatus refleja navigator.onLine + listeners online/offline.
- * jsdom expone window.dispatchEvent y navigator.onLine es writable.
- */
 describe('useOnlineStatus', () => {
   afterEach(() => {
     Object.defineProperty(navigator, 'onLine', { writable: true, value: true });

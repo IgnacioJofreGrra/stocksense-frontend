@@ -38,14 +38,6 @@ import {
 
 type FiltroStock = 'todos' | 'sin-stock' | 'bajo-stock' | 'ok';
 
-/**
- * InventoryPage — 3 vistas en tabs.
- *
- * 1. Stock: cards de productos con badges semaforo, ordenable y filtrable.
- * 2. Movimientos: historial paginado de un producto seleccionado del
- *    dropdown (el backend no tiene historial global; este es el patron).
- * 3. Rotacion: grafico de barras con productos mas vendidos (recharts).
- */
 export function InventoryPage() {
   return (
     <div className="space-y-4">
@@ -79,13 +71,9 @@ export function InventoryPage() {
   );
 }
 
-// ===== TAB STOCK =====
-
 function ResumenStock() {
   const [filtro, setFiltro] = useState<FiltroStock>('todos');
   const [busqueda, setBusqueda] = useState('');
-  // Pedimos 100 — para el dueño de un comercio de barrio es mucho. Si
-  // hace falta paginar, ya tenemos infra (typePolicies).
   const { data, loading } = useProductosQuery({
     variables: { query: { page: 1, limit: 100, search: busqueda || undefined } },
     fetchPolicy: 'cache-and-network',
@@ -165,8 +153,6 @@ function ResumenStock() {
   );
 }
 
-// ===== TAB MOVIMIENTOS =====
-
 const PAGE_SIZE_MOVS = 20;
 
 function HistorialMovimientos() {
@@ -174,13 +160,11 @@ function HistorialMovimientos() {
   const [tipoFiltro, setTipoFiltro] = useState<StockMovementType | 'TODOS'>('TODOS');
   const [page, setPage] = useState(1);
 
-  // Lista de productos para el dropdown.
   const { data: productosData } = useProductosQuery({
     variables: { query: { page: 1, limit: 100 } },
   });
   const productos = productosData?.productos.data ?? [];
 
-  // Si no hay productoId seleccionado, no consultamos.
   const { data, loading } = useMovimientosProductoQuery({
     variables: {
       productId: productoId,
@@ -340,8 +324,6 @@ function TipoBadge({ tipo }: { tipo: StockMovementType }) {
   }
   return <Badge variant="secondary">Ajuste</Badge>;
 }
-
-// ===== TAB ROTACION =====
 
 function Rotacion() {
   const { data, loading } = useProductosMasVendidosQuery({

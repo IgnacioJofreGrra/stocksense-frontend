@@ -24,21 +24,6 @@ const TAB_DEFS: ReadonlyArray<{
   { value: 'orden', label: 'Orden de compra', icon: ShoppingCart },
 ];
 
-/**
- * AiInsightsPage — pagina /inteligencia.
- *
- * Estructura:
- * - Header con titulo + descripcion del modulo
- * - Selector de tab: Tabs estandar de shadcn en md+, dropdown en mobile
- *   (porque 3 botones grandes ocupan toda la pantalla del celular)
- * - Cada tab contiene su propio fetch lazy + UX (loading/error/empty)
- *
- * Decisiones:
- * - Cada tab carga datos solo cuando el usuario aprieta "Analizar". Esto
- *   evita que abrir la pagina dispare 3 queries de IA (rate limit + costos).
- * - Las tabs son independientes — entrar a Tendencias y volver a
- *   Predicciones NO refetcha (los hooks lazy mantienen su data).
- */
 export function AiInsightsPage() {
   const [activeTab, setActiveTab] = useState<AiTab>('predicciones');
 
@@ -62,7 +47,7 @@ export function AiInsightsPage() {
         onValueChange={(v) => setActiveTab(v as AiTab)}
         className="space-y-4"
       >
-        {/* Mobile: dropdown selector. Desktop: tabs horizontales. */}
+        {/* mobile: dropdown en vez de tabs */}
         <div className="md:hidden">
           <Select value={activeTab} onValueChange={(v) => setActiveTab(v as AiTab)}>
             <SelectTrigger className="w-full" aria-label="Seleccionar tab de inteligencia">

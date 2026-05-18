@@ -7,19 +7,9 @@ import { RoleGuard } from '@/components/layout/RoleGuard';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 
-/**
- * Code splitting: cada ruta protegida vive en su propio chunk.
- *
- * Decisiones:
- * - LoginPage / RegisterPage: NO lazy. Son las primeras pantallas visibles
- *   en una sesion no autenticada; cargarlas eagerly evita el flash de
- *   loader al primer arranque.
- * - AppLayout: NO lazy. Si fuese lazy junto con la ruta hija, habria un
- *   doble Suspense en cascada (loader del layout + loader de la pagina).
- * - Patron `.then(m => ({ default: m.X }))`: las paginas usan named
- *   exports (compatibles con tests). lazy() requiere default exports;
- *   el wrapper convierte uno al otro sin tocar las paginas.
- */
+// Login/Register y AppLayout no son lazy a proposito: evitan el flash de
+// loader al arrancar y un doble Suspense en cascada. El wrapper
+// `.then(m => ({ default: m.X }))` adapta los named exports a lazy().
 const DashboardPage = lazy(() =>
   import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
 );
@@ -35,23 +25,11 @@ const InventoryPage = lazy(() =>
 const ProfilePage = lazy(() =>
   import('@/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
-// AiInsightsPage: pagina pesada (Recharts + 3 queries + lazy tabs internas).
-// Lazy load la mantiene fuera del initial bundle — solo se baja cuando el
-// dueno entra a /inteligencia.
+// AiInsightsPage es pesada (Recharts): lazy la mantiene fuera del bundle inicial.
 const AiInsightsPage = lazy(() =>
   import('@/pages/AiInsightsPage').then((m) => ({ default: m.AiInsightsPage })),
 );
 
-/**
- * Mapa de rutas:
- * - /login, /register -> publicas. Si el user ya esta autenticado,
- *   esos componentes redirigen a /dashboard internamente.
- * - todo lo demas pasa por <ProtectedRoute /> que verifica el store.
- *   Adentro del Outlet, AppLayout pinta el shell y los hijos lazy se
- *   renderizan dentro del Suspense.
- * - "*" cualquier ruta no matcheada -> redirect a /dashboard. ProtectedRoute
- *   se encarga de mandar a /login si no hay sesion.
- */
 export function AppRoutes() {
   return (
     <Routes>
@@ -100,11 +78,8 @@ export function AppRoutes() {
               </Suspense>
             }
           />
-          {/*
-           * /inteligencia: solo dueno. RoleGuard envuelve y redirige a
-           * /dashboard si el rol no es dueno. Es la proteccion real (la
-           * ocultacion en sidebar es solo UX).
-           */}
+          {/* /inteligencia: solo dueno. RoleGuard es la proteccion real;
+              ocultarlo del sidebar es solo UX. */}
           <Route element={<RoleGuard allow={['dueno']} />}>
             <Route
               path="/inteligencia"

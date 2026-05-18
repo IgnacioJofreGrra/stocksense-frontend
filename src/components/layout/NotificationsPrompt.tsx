@@ -3,17 +3,6 @@ import { Button } from '@/components/ui/button';
 import { useBrowserNotifications } from '@/hooks/useBrowserNotifications';
 import { useState } from 'react';
 
-/**
- * NotificationsPrompt — banner sutil pidiendo permiso para alertas.
- *
- * Se muestra solo si:
- * - El navegador soporta Notification.
- * - El usuario nunca respondio (permission === 'default').
- * - No preguntamos antes (yaPreguntamos === false).
- *
- * El usuario puede cerrarlo (X) y persistimos esa decision en localStorage
- * para no volver a molestar.
- */
 export function NotificationsPrompt() {
   const { permission, yaPreguntamos, pedirPermiso } = useBrowserNotifications();
   const [cerrado, setCerrado] = useState(false);
@@ -28,8 +17,7 @@ export function NotificationsPrompt() {
   };
 
   const handleCerrar = () => {
-    // Marcamos como "preguntado" igual, asi no insistimos cada vez que
-    // llega una nueva alerta.
+    // marcar como preguntado para no insistir en cada alerta
     localStorage.setItem('stocksense_notifications_asked', '1');
     setCerrado(true);
   };

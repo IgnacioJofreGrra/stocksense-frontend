@@ -8,16 +8,10 @@ import { useAuthStore } from '@/stores/authStore';
 const HTTP_URL = import.meta.env.VITE_GRAPHQL_URL ?? 'http://localhost:3000/graphql';
 const WS_URL = import.meta.env.VITE_GRAPHQL_WS_URL ?? 'ws://localhost:3000/graphql';
 
-/**
- * HTTP link: queries y mutations van por POST a /graphql.
- */
 const httpLink = new HttpLink({ uri: HTTP_URL });
 
-/**
- * Auth link middleware: agrega Authorization Bearer en cada request HTTP.
- * Lee el token del store en runtime, asi cuando hace refresh la siguiente
- * request usa el token nuevo automaticamente (sin recrear el client).
- */
+// Lee el token del store en runtime: tras un refresh la proxima request
+// usa el token nuevo sin recrear el client.
 const authLink = setContext((_op, { headers }) => {
   const token = useAuthStore.getState().accessToken;
   return {
@@ -28,16 +22,9 @@ const authLink = setContext((_op, { headers }) => {
   };
 });
 
-/**
- * WebSocket client para subscriptions.
- *
- * connectionParams como funcion: graphql-ws la invoca cada vez que abre
- * conexion. Asi en cada reconexion lee el token actual del store en lugar
- * de quedarse con el de la primera conexion.
- *
- * keepAlive: 10s entre pings. Sin esto, NATs y proxies cierran la WS al
- * primer minuto de inactividad.
- */
+// connectionParams como funcion: graphql-ws la invoca en cada (re)conexion,
+// asi siempre lee el token actual del store. keepAlive evita que NATs y
+// proxies cierren la WS por inactividad.
 const wsClient = createWsClient({
   url: WS_URL,
   keepAlive: 10_000,
@@ -49,25 +36,17 @@ const wsClient = createWsClient({
 
 const wsLink = new GraphQLWsLink(wsClient);
 
-/**
- * Cuando el accessToken cambia (login, refresh, logout), forzamos cerrar
- * la WS. graphql-ws reabre automaticamente y connectionParams lee el
- * nuevo token. Sin esto, una subscription iniciada con un token vencido
- * sigue intentando reconectar con el mismo.
- */
+// Al cambiar el accessToken cerramos la WS para que reabra con el token
+// nuevo; sin esto una subscription sigue reconectando con uno vencido.
 let prevToken = useAuthStore.getState().accessToken;
 useAuthStore.subscribe((state) => {
   if (state.accessToken !== prevToken) {
     prevToken = state.accessToken;
-    // terminate (no dispose): cierra la conexion sin marcar el client
-    // como permanentemente cerrado. graphql-ws reabre solo.
+    // terminate (no dispose): graphql-ws reabre solo.
     wsClient.terminate();
   }
 });
 
-/**
- * Split: subscriptions van por WS, lo demas por HTTP+auth.
- */
 const splitLink = split(
   ({ query }) => {
     const definition = getMainDefinition(query);
@@ -79,18 +58,8 @@ const splitLink = split(
   authLink.concat(httpLink),
 );
 
-/**
- * typePolicies: configuracion de cache de Apollo.
- *
- * Productos: keyArgs incluye solo los filtros que cambian la "consulta
- * conceptual" (search, categoria, activo). NO incluimos page/limit en
- * keyArgs porque queremos que paginas distintas vivan bajo la misma
- * entrada del cache.
- *
- * merge: reemplazamos al cambiar de pagina (no acumular). Para esta app
- * el dueño quiere paginas claras, no scroll infinito. Si manana queremos
- * infinite scroll, cambiamos por una funcion que concatene `data`.
- */
+// keyArgs excluye page/limit a proposito: las distintas paginas comparten
+// entrada de cache. merge reemplaza (paginacion clasica, no scroll infinito).
 const cache = new InMemoryCache({
   typePolicies: {
     Query: {

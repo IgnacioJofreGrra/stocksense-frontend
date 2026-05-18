@@ -4,15 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ProductFormModal } from './ProductFormModal';
 
-/**
- * Tests del ProductFormModal.
- *
- * Mockeamos Apollo con MockedProvider (sin mocks de mutations: solo
- * verificamos validacion client-side, que no llega a tocar el server).
- *
- * sonner usa un singleton; lo silenciamos para que no escupa toasts en
- * consola durante los tests.
- */
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),

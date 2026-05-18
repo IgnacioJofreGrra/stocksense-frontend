@@ -20,10 +20,7 @@ const URGENCIA_RANK: Record<string, number> = {
   baja: 2,
 };
 
-/**
- * Ordena: urgencia alta primero, luego dias hasta agotamiento ascendente.
- * Asi el dueno ve primero lo mas critico.
- */
+// urgencia alta primero, luego dias hasta agotamiento ascendente
 function ordenarPredicciones(
   predicciones: PrediccionRestockFragment[],
 ): PrediccionRestockFragment[] {
@@ -35,34 +32,14 @@ function ordenarPredicciones(
   });
 }
 
-/**
- * PrediccionesTab — Tab "Predicciones de Reposicion".
- *
- * Flujo:
- * 1. Render inicial: estado vacio con CTA "Analizar mi inventario".
- * 2. Click -> dispara predecirReposicion (1-3s con Groq).
- * 3. Loading: skeletons en grid + timer.
- * 4. Success: cards ordenadas por urgencia + boton de refresh.
- * 5. Error: AiErrorState segun el tipo (rate-limit, unavailable, etc.).
- *
- * Rate limit:
- * - Si la query falla por 429, arrancamos el countdown y deshabilitamos el
- *   boton de refresh hasta que termine.
- *
- * fetchPolicy 'network-only' en refresh: forzamos ir al servidor (que ya
- * tiene su propio cache de 30min). Sin esto, Apollo devuelve el resultado
- * cacheado del primer fetch.
- */
 export function PrediccionesTab() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const countdown = useAiCountdown();
 
+  // network-only: ignora el cache de Apollo, el backend ya cachea 30min
   const [fetchPredicciones, { data, loading, error }] = usePredecirReposicionLazyQuery({
     fetchPolicy: 'network-only',
     notifyOnNetworkStatusChange: true,
-    // onCompleted dispara solo en exito; lo usamos para el timestamp de
-    // frescura sin meter setState en useEffect (evita la regla de
-    // cascading renders del compiler de React).
     onCompleted: () => setLastUpdated(new Date()),
     onError: (err) => {
       const info = classifyAiError(err);

@@ -47,19 +47,6 @@ import { useAuthStore } from '@/stores/authStore';
 
 const PAGE_SIZE = 20;
 
-/**
- * ProductsPage — tabla paginada con busqueda y acciones rapidas.
- *
- * Decisiones de UX:
- * - stockActual viene como ResolveField; lo pedimos siempre porque la
- *   tabla SIEMPRE lo muestra. Si manana hay un modo "solo metadata",
- *   creamos otra query sin ese campo.
- * - Search live: filtra en cada tecla con debounce simple via Apollo
- *   variables (no agregamos lib de debounce aun; si la lista es chica,
- *   ni se nota).
- * - Mobile: la tabla scrollea horizontal; las acciones se condensan en
- *   iconos (md+ muestra texto).
- */
 export function ProductsPage() {
   const { user } = useAuthStore();
   const esDueno = user?.rol === 'dueno';
@@ -78,9 +65,6 @@ export function ProductsPage() {
         page,
         limit: PAGE_SIZE,
         search: search || undefined,
-        // Cuando ver desactivados esta on, mandamos activo:false al
-        // backend para que devuelva los retirados (el toggle se ve como
-        // "papelera"). El backend acepta este filtro en QueryProductsInput.
         activo: !verDesactivados,
       },
     },
@@ -117,8 +101,7 @@ export function ProductsPage() {
   };
 
   const handleReactivar = (p: ProductoFullFragment) => {
-    // TODO: el backend ya acepta `activo:true` en UpdateProductInput;
-    // queda reconectar este handler al mutation real.
+    // TODO: reconectar al mutation real (backend ya acepta activo:true)
     toast.info(`Reactivacion de "${p.nombre}" estara disponible proximamente`);
     void actualizarProducto;
   };
@@ -155,7 +138,6 @@ export function ProductsPage() {
                 className="pl-10"
               />
             </div>
-            {/* Toggle papelera: si esta on, mostramos solo desactivados */}
             <Button
               variant={verDesactivados ? 'default' : 'outline'}
               size="sm"
@@ -345,7 +327,6 @@ export function ProductsPage() {
         />
       )}
 
-      {/* Confirmacion de desactivacion */}
       <Dialog
         open={!!productoEliminar}
         onOpenChange={(open) => !open && setProductoEliminar(null)}
@@ -379,9 +360,6 @@ interface EmptyProps {
   onCrear?: () => void;
 }
 
-/**
- * Empty state contextual: distinto mensaje segun por que esta vacia la lista.
- */
 function EmptyProductos({ search, verDesactivados, onCrear }: EmptyProps) {
   if (search) {
     return (

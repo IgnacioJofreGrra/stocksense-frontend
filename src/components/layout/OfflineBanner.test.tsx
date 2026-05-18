@@ -17,7 +17,6 @@ describe('OfflineBanner', () => {
   it('se renderiza con mensaje claro si offline', () => {
     Object.defineProperty(navigator, 'onLine', { writable: true, value: false });
     render(<OfflineBanner />);
-    // Disparamos el evento para que el listener actualice estado.
     act(() => {
       window.dispatchEvent(new Event('offline'));
     });

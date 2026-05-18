@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isValidEan13, validateEan13 } from './ean13';
 
-/**
- * Tests del validador EAN-13 client-side.
- *
- * Replica los casos del backend (src/common/validators/ean13.validator.spec.ts)
- * para garantizar que ambos lados validan exactamente lo mismo.
- */
 describe('isValidEan13', () => {
   it('acepta el EAN-13 valido de Coca Cola Mexico', () => {
     expect(isValidEan13('7501031311309')).toBe(true);

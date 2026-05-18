@@ -3,11 +3,6 @@ import { GraphQLError } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { classifyAiError } from './useAiQuery';
 
-/**
- * Tests de classifyAiError. El hook useAiCountdown se cubre de manera
- * indirecta a traves del PrediccionesTab.test (test del rate-limit UX).
- */
-
 function makeApolloError(message: string, extensions: Record<string, unknown> = {}): ApolloError {
   return new ApolloError({
     graphQLErrors: [new GraphQLError(message, { extensions })],

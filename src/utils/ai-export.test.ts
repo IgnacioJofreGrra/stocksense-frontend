@@ -2,12 +2,6 @@ import { describe, expect, it } from 'vitest';
 import type { OrdenCompraFragment } from '@/generated/graphql';
 import { buildOrdenCompraCsv, ordenCompraFileName } from './ai-export';
 
-/**
- * Tests del export de orden de compra a CSV. Solo testeamos la funcion
- * pura (sin tocar Blob/document) — la descarga real es una capa fina y
- * la cubrimos en el test del componente OrdenCompraTab.
- */
-
 const ordenFixture: OrdenCompraFragment = {
   __typename: 'OrdenCompraGql',
   totalEstimado: 51000,

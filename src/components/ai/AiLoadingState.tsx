@@ -3,26 +3,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useElapsedTimer } from '@/hooks/useAiQuery';
 
 interface Props {
-  /** Texto contextual: "tu inventario", "tus ventas", "tu proxima compra"... */
   message: string;
-  /** Cantidad de skeletons a mostrar (default 3). */
   skeletons?: number;
-  /**
-   * Alto de cada skeleton en clases tailwind. Permite que cada tab use
-   * placeholders del shape correcto (cards = h-40, tabla = h-12).
-   */
   skeletonClassName?: string;
-  /** Si es true, los skeletons se renderizan en grid; si no, en columna. */
   grid?: boolean;
 }
 
-/**
- * AiLoadingState — placeholder mientras Groq procesa (1-3s).
- *
- * El elapsed timer arriba ("Analizando... 2s") evita que el operador
- * piense que la app se trabo. Es un detalle minimo pero clave para
- * percepcion de performance — sin esto, 3s se sienten como 10s.
- */
 export function AiLoadingState({
   message,
   skeletons = 3,
