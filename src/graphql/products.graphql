@@ -12,6 +12,7 @@ fragment ProductoFull on Product {
   unidadMedida
   stockMinimo
   stockActual
+  imagenUrl
   activo
 }
 

@@ -32,11 +32,9 @@ import { validateEan13 } from '@/utils/ean13';
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Si viene, edita; si no, crea. */
+  /** si viene, edita; si no, crea */
   producto?: ProductoFullFragment | null;
-  /** Si viene, pre-llena ean13 (uso desde el escaner). */
   ean13Inicial?: string;
-  /** Sugerencia de Open Food Facts para pre-llenar datos. */
   sugerenciaOff?: {
     nombre?: string | null;
     marca?: string | null;
@@ -55,6 +53,7 @@ interface FormState {
   precioVenta: string;
   unidadMedida: string;
   stockMinimo: string;
+  imagenUrl: string;
 }
 
 const EMPTY: FormState = {
@@ -66,6 +65,7 @@ const EMPTY: FormState = {
   precioVenta: '',
   unidadMedida: 'unidad',
   stockMinimo: '5',
+  imagenUrl: '',
 };
 
 function buildInitial(
@@ -91,6 +91,7 @@ function buildInitial(
       precioVenta: producto.precioVenta?.toString() ?? '',
       unidadMedida: producto.unidadMedida,
       stockMinimo: producto.stockMinimo.toString(),
+      imagenUrl: producto.imagenUrl ?? '',
     };
   }
 
@@ -100,20 +101,10 @@ function buildInitial(
     nombre: sugerenciaOff?.nombre ?? '',
     descripcion: sugerenciaOff?.marca ?? '',
     categoria: sugerenciaOff?.categoria ?? '',
+    imagenUrl: sugerenciaOff?.imagenUrl ?? '',
   };
 }
 
-/**
- * ProductFormModal — crea o edita un producto.
- *
- * Wrapper Dialog. El form interno (FormBody) se monta con un `key` que
- * deriva del producto/ean13Inicial. Cuando cambia, React remonta y
- * `useState(buildInitial(...))` se evalua con los nuevos props.
- *
- * Esto evita el patron useEffect+setState para "sync a state con props"
- * que React 19 marca como anti-patron (set-state-in-effect rule). El
- * remontado por key es la solucion canonica.
- */
 export function ProductFormModal({
   open,
   onOpenChange,
@@ -122,10 +113,7 @@ export function ProductFormModal({
   sugerenciaOff,
   onSuccess,
 }: Props) {
-  // Key cambia cuando cambia el target del modal -> FormBody se remonta.
-  // Si abrimos/cerramos sin cambiar producto, el key sigue igual y NO se
-  // pierde lo tipeado (UX: si cancelas y vuelves a abrir el mismo, lo
-  // tenes igual). Para limpiar al cerrar, agregamos `open` al key tambien.
+  // el key fuerza remount de FormBody para reinicializar el state desde props
   const formKey = `${producto?.id ?? 'new'}-${ean13Inicial ?? ''}-${open ? 'open' : 'closed'}`;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -170,9 +158,6 @@ interface FormBodyProps {
 
 function FormBody({ producto, ean13Inicial, sugerenciaOff, onCancel, onSuccess }: FormBodyProps) {
   const isEdit = !!producto;
-  // Lazy init: la funcion solo corre al primer mount. Cuando el padre
-  // cambia el `key`, el componente se remonta y este init corre con
-  // los nuevos props.
   const [form, setForm] = useState<FormState>(() =>
     buildInitial(producto, ean13Inicial, sugerenciaOff),
   );
@@ -194,8 +179,6 @@ function FormBody({ producto, ean13Inicial, sugerenciaOff, onCancel, onSuccess }
     e.preventDefault();
     if (!ean13Valido) return;
 
-    // Convertir strings a numbers (los inputs tipo number a veces dan
-    // string ''). El backend ya valida, asi que solo enviamos lo definido.
     const input = {
       ean13: form.ean13,
       nombre: form.nombre,
@@ -205,11 +188,11 @@ function FormBody({ producto, ean13Inicial, sugerenciaOff, onCancel, onSuccess }
       precioVenta: form.precioVenta ? Number(form.precioVenta) : undefined,
       unidadMedida: form.unidadMedida || undefined,
       stockMinimo: form.stockMinimo ? Number(form.stockMinimo) : undefined,
+      imagenUrl: form.imagenUrl || undefined,
     };
 
     try {
       if (isEdit && producto) {
-        // Update no acepta ean13 si no cambio (el backend valida igual).
         const { data } = await actualizarProducto({
           variables: { id: producto.id, input },
         });
@@ -231,6 +214,20 @@ function FormBody({ producto, ean13Inicial, sugerenciaOff, onCancel, onSuccess }
 
   return (
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+          {form.imagenUrl && (
+            <div className="flex justify-center">
+              <img
+                src={form.imagenUrl}
+                alt={form.nombre || 'Producto'}
+                className="h-28 w-28 rounded-md border object-contain"
+                onError={(e) => {
+                  // ocultar si la URL de OFF esta rota, sin romper el form
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="ean13">EAN-13</Label>
             <div className="relative">

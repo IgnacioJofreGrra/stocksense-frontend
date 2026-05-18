@@ -26,20 +26,6 @@ import {
 } from '@/generated/graphql';
 import { isValidEan13 } from '@/utils/ean13';
 
-/**
- * ScannerPage — feature estrella.
- *
- * Configuracion del lector ZXing:
- * - Hints: solo EAN_13. Ignorar otros formatos acelera la deteccion y
- *   evita falsos positivos con QR/Code128 que no nos sirven.
- * - facingMode environment: camara trasera por default (la del celular
- *   apuntando a la espalda, para escanear cosas fisicas).
- *
- * Flujo continuo: tras una accion (entrada/venta/registro), volvemos al
- * modo "buscando" sin rebooteo del stream — solo limpiamos el estado del
- * producto encontrado.
- */
-// Agregar tipo para la sugerencia de OFF
 interface SugerenciaOff {
   nombre?: string | null;
   marca?: string | null;
@@ -51,7 +37,7 @@ type Estado =
   | { kind: 'idle' }
   | { kind: 'searching'; ean13: string }
   | { kind: 'found'; producto: ProductoFullFragment }
-  | { kind: 'not-found'; ean13: string; sugerencia: SugerenciaOff | null } // ← agregar sugerencia
+  | { kind: 'not-found'; ean13: string; sugerencia: SugerenciaOff | null }
   | { kind: 'invalid'; codigo: string }
   | { kind: 'error'; message: string };
 
@@ -74,10 +60,7 @@ export function ScannerPage() {
     fetchPolicy: 'network-only',
   });
 
-  /**
-   * Procesa un EAN-13 detectado (camara o input manual).
-   * Centralizado aca para que ambos paths usen la misma logica.
-   */
+  // path comun para camara e input manual
   const procesarEan = useCallback(
     async (codigo: string) => {
       const limpio = codigo.replace(/\D/g, '');
@@ -96,7 +79,6 @@ export function ScannerPage() {
         if (resultado?.fuente === 'local' && resultado.producto) {
           setEstado({ kind: 'found', producto: resultado.producto });
         } else {
-          // fuente: 'off' o 'desconocido' — en ambos casos mostramos el form
           setEstado({
             kind: 'not-found',
             ean13: limpio,
@@ -113,10 +95,6 @@ export function ScannerPage() {
     [buscarProducto],
   );
 
-  /**
-   * Inicializa la camara y empieza a escuchar decodes.
-   * Cleanup al desmontar para liberar el stream.
-   */
   useEffect(() => {
     const hints = new Map<DecodeHintType, unknown>();
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13]);
@@ -124,10 +102,7 @@ export function ScannerPage() {
 
     const reader = new BrowserMultiFormatReader(hints);
     readerRef.current = reader;
-    // Capturamos el video element en una var local para que el cleanup
-    // tenga acceso garantizado al mismo node que estamos usando ahora
-    // (la regla react-hooks/exhaustive-deps avisa que videoRef.current
-    // puede haber cambiado al momento de cleanup; con esta variable no).
+    // capturado en local: el cleanup no debe leer videoRef.current (puede haber cambiado)
     const videoEl = videoRef.current;
 
     let stopped = false;
@@ -142,14 +117,12 @@ export function ScannerPage() {
             if (result) {
               const text = result.getText();
               const now = Date.now();
-              // Cooldown: ignoramos detecciones repetidas en el mismo
-              // gap. Sin esto, el reader dispara 30+ veces por segundo.
+              // cooldown: sin esto el reader dispara 30+ decodes/seg del mismo codigo
               if (now - lastScanAtRef.current < SCAN_COOLDOWN_MS) return;
               lastScanAtRef.current = now;
               void procesarEan(text);
             }
-            // NotFoundException es esperado en cada frame que no tiene un
-            // codigo: lo ignoramos. Otros errores los logueamos.
+            // NotFoundException ocurre en cada frame sin codigo; solo logueamos lo demas
             if (err && !(err instanceof NotFoundException)) {
               console.warn('[scanner] decode error', err.message);
             }
@@ -167,8 +140,7 @@ export function ScannerPage() {
 
     return () => {
       stopped = true;
-      // Stop tracks del MediaStream para liberar la camara. Usamos la
-      // variable capturada al efecto para no leer el ref en cleanup.
+      // liberar la camara: stop de los tracks del MediaStream
       const stream = videoEl?.srcObject;
       if (stream && stream instanceof MediaStream) {
         stream.getTracks().forEach((t) => t.stop());
@@ -201,7 +173,6 @@ export function ScannerPage() {
         </p>
       </div>
 
-      {/* Visor de camara */}
       <Card className="overflow-hidden">
         <div className="relative bg-black">
           <video
@@ -210,11 +181,9 @@ export function ScannerPage() {
             playsInline
             muted
           />
-          {/* Overlay: marco de guia */}
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="h-32 w-3/4 max-w-md rounded-lg border-2 border-white/70 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
           </div>
-          {/* Estado */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
             {!cameraReady && !cameraError && (
               <Badge variant="secondary" className="gap-2">
@@ -240,8 +209,7 @@ export function ScannerPage() {
           </div>
         </div>
 
-        {/* Fallback manual: siempre visible. Critico cuando no hay camara
-            o el codigo esta dañado. */}
+        {/* fallback manual, util cuando la camara falla o el codigo esta dañado */}
         <CardContent className="border-t pt-4">
           <form onSubmit={handleManualSubmit} className="flex gap-2">
             <div className="relative flex-1">
@@ -269,7 +237,6 @@ export function ScannerPage() {
         </CardContent>
       </Card>
 
-      {/* Resultado del scan */}
       {estado.kind === 'found' && (
         <ResultadoEncontrado
           producto={estado.producto}
@@ -317,7 +284,6 @@ export function ScannerPage() {
         </Card>
       )}
 
-      {/* Dialogs */}
       {estado.kind === 'found' && (
         <>
           <QuickEntryDialog
@@ -340,7 +306,7 @@ export function ScannerPage() {
           open={showCrear}
           onOpenChange={setShowCrear}
           ean13Inicial={estado.ean13}
-          sugerenciaOff={estado.sugerencia}  // ← nuevo prop
+          sugerenciaOff={estado.sugerencia}
           onSuccess={(p) => setEstado({ kind: 'found', producto: p })}
         />
       )}
@@ -414,18 +380,29 @@ function ResultadoNoEncontrado({
         <p className="font-mono text-xs text-muted-foreground">EAN {ean13}</p>
       </CardHeader>
       <CardContent className="space-y-2">
-        {/* Si OFF encontró datos, mostrarlos como preview */}
         {sugerencia ? (
-          <div className="rounded-md bg-muted p-3 text-sm space-y-1">
-            <p className="font-medium text-foreground">
-              {sugerencia.nombre ?? 'Nombre no disponible'}
-            </p>
-            {sugerencia.marca && (
-              <p className="text-muted-foreground">Marca: {sugerencia.marca}</p>
+          <div className="flex gap-3 rounded-md bg-muted p-3 text-sm">
+            {sugerencia.imagenUrl && (
+              <img
+                src={sugerencia.imagenUrl}
+                alt={sugerencia.nombre ?? 'Producto'}
+                className="h-16 w-16 shrink-0 rounded border bg-white object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             )}
-            <p className="text-xs text-blue-600">
-              Datos sugeridos por Open Food Facts — podés editarlos antes de guardar
-            </p>
+            <div className="space-y-1">
+              <p className="font-medium text-foreground">
+                {sugerencia.nombre ?? 'Nombre no disponible'}
+              </p>
+              {sugerencia.marca && (
+                <p className="text-muted-foreground">Marca: {sugerencia.marca}</p>
+              )}
+              <p className="text-xs text-blue-600">
+                Datos sugeridos por Open Food Facts — podés editarlos antes de guardar
+              </p>
+            </div>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">

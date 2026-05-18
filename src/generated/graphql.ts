@@ -212,7 +212,7 @@ export type Query = {
   movimientosProducto: PaginatedMovimientos;
   predecirReposicion: Array<PrediccionRestockGql>;
   producto?: Maybe<Product>;
-  productoPorEan?: Maybe<Product>;
+  productoPorEan: ResultadoEscaner;
   productos: PaginatedProducts;
   productosMasVendidos: Array<ProductoMasVendido>;
   resumenPeriodo: ResumenPeriodo;
@@ -323,6 +323,13 @@ export type RegistrarSalidaInput = {
   productId: Scalars['ID']['input'];
 };
 
+export type ResultadoEscaner = {
+  __typename?: 'ResultadoEscaner';
+  fuente: Scalars['String']['output'];
+  producto?: Maybe<Product>;
+  sugerenciaOff?: Maybe<SugerenciaOff>;
+};
+
 export type ResumenPeriodo = {
   __typename?: 'ResumenPeriodo';
   movimientosTotales: Scalars['Int']['output'];
@@ -371,6 +378,14 @@ export type Subscription = {
   alertaStockBajo: AlertaStock;
 };
 
+export type SugerenciaOff = {
+  __typename?: 'SugerenciaOff';
+  categoria?: Maybe<Scalars['String']['output']>;
+  imagenUrl?: Maybe<Scalars['String']['output']>;
+  marca?: Maybe<Scalars['String']['output']>;
+  nombre?: Maybe<Scalars['String']['output']>;
+};
+
 export type TendenciaPunto = {
   __typename?: 'TendenciaPunto';
   cantidadTotal: Scalars['Int']['output'];
@@ -379,6 +394,7 @@ export type TendenciaPunto = {
 };
 
 export type UpdateProductInput = {
+  activo?: InputMaybe<Scalars['Boolean']['input']>;
   categoria?: InputMaybe<Scalars['String']['input']>;
   descripcion?: InputMaybe<Scalars['String']['input']>;
   ean13?: InputMaybe<Scalars['String']['input']>;
@@ -485,28 +501,28 @@ export type AlertaStockBajoSubscriptionVariables = Exact<{ [key: string]: never;
 
 export type AlertaStockBajoSubscription = { __typename?: 'Subscription', alertaStockBajo: { __typename?: 'AlertaStock', stockActual: number, stockMinimo: number, diferencia: number, producto: { __typename?: 'Product', id: string, nombre: string, ean13: string } } };
 
-export type ProductoFullFragment = { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, activo: boolean };
+export type ProductoFullFragment = { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, imagenUrl?: string | null, activo: boolean };
 
 export type ProductosQueryVariables = Exact<{
   query?: InputMaybe<QueryProductsInput>;
 }>;
 
 
-export type ProductosQuery = { __typename?: 'Query', productos: { __typename?: 'PaginatedProducts', total: number, page: number, lastPage: number, data: Array<{ __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, activo: boolean }> } };
+export type ProductosQuery = { __typename?: 'Query', productos: { __typename?: 'PaginatedProducts', total: number, page: number, lastPage: number, data: Array<{ __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, imagenUrl?: string | null, activo: boolean }> } };
 
 export type ProductoPorEanQueryVariables = Exact<{
   ean13: Scalars['String']['input'];
 }>;
 
 
-export type ProductoPorEanQuery = { __typename?: 'Query', productoPorEan?: { __typename?: 'ResultadoEscaner', fuente: string, producto?: { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, activo: boolean } | null, sugerenciaOff?: { __typename?: 'SugerenciaOff', nombre?: string | null, marca?: string | null, categoria?: string | null, imagenUrl?: string | null } | null } | null };
+export type ProductoPorEanQuery = { __typename?: 'Query', productoPorEan: { __typename?: 'ResultadoEscaner', fuente: string, producto?: { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, imagenUrl?: string | null, activo: boolean } | null, sugerenciaOff?: { __typename?: 'SugerenciaOff', nombre?: string | null, marca?: string | null, categoria?: string | null, imagenUrl?: string | null } | null } };
 
 export type CrearProductoMutationVariables = Exact<{
   input: CreateProductInput;
 }>;
 
 
-export type CrearProductoMutation = { __typename?: 'Mutation', crearProducto: { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, activo: boolean } };
+export type CrearProductoMutation = { __typename?: 'Mutation', crearProducto: { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, imagenUrl?: string | null, activo: boolean } };
 
 export type ActualizarProductoMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -514,7 +530,7 @@ export type ActualizarProductoMutationVariables = Exact<{
 }>;
 
 
-export type ActualizarProductoMutation = { __typename?: 'Mutation', actualizarProducto: { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, activo: boolean } };
+export type ActualizarProductoMutation = { __typename?: 'Mutation', actualizarProducto: { __typename?: 'Product', id: string, ean13: string, nombre: string, descripcion?: string | null, categoria?: string | null, precioCompra?: number | null, precioVenta?: number | null, unidadMedida: string, stockMinimo: number, stockActual: number, imagenUrl?: string | null, activo: boolean } };
 
 export type DesactivarProductoMutationVariables = Exact<{
   id: Scalars['ID']['input'];
@@ -600,6 +616,7 @@ export const ProductoFullFragmentDoc = gql`
   unidadMedida
   stockMinimo
   stockActual
+  imagenUrl
   activo
 }
     `;
