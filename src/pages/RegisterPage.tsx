@@ -1,11 +1,14 @@
-import { useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Boxes } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { TurnstileWidget } from '@/components/auth/TurnstileWidget';
 import { useAuthStore } from '@/stores/authStore';
+
+const TURNSTILE_ENABLED = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -18,6 +21,8 @@ export function RegisterPage() {
     comercioNombre: '',
   });
   const [localError, setLocalError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const onTurnstileToken = useCallback((token: string) => setTurnstileToken(token), []);
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
@@ -33,12 +38,18 @@ export function RegisterPage() {
       return;
     }
 
+    if (TURNSTILE_ENABLED && !turnstileToken) {
+      setLocalError('Completa el captcha antes de continuar');
+      return;
+    }
+
     try {
       await register({
         email: form.email,
         password: form.password,
         nombre: form.nombre,
         comercioNombre: form.comercioNombre,
+        ...(turnstileToken ? { turnstileToken } : {}),
       });
       navigate('/dashboard');
     } catch {
@@ -121,13 +132,19 @@ export function RegisterPage() {
               />
             </div>
 
+            <TurnstileWidget onToken={onTurnstileToken} />
+
             {showError && (
               <p className="text-sm text-destructive" role="alert">
                 {showError}
               </p>
             )}
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading || (TURNSTILE_ENABLED && !turnstileToken)}
+            >
               {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
             </Button>
 

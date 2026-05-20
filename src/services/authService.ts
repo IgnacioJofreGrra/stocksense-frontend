@@ -26,6 +26,8 @@ export interface RegisterData {
   password: string;
   nombre: string;
   comercioNombre: string;
+  // Si el server tiene Turnstile habilitado, el guard lo exige.
+  turnstileToken?: string;
 }
 
 export interface LoginData {
